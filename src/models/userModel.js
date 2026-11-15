@@ -7,13 +7,15 @@ const UserSchema = new mongoose.Schema({
     },
     username: {
         type: String,
-        reqiured: true
+        required: true,
+        unique: true,
+        lowercase: true,
+        trim: true
     },
     email: {
         type: String,
         required: true,
-        unique: true,
-        lowercase: true
+        select: false
     },
     password: {
         type: String,
@@ -58,12 +60,12 @@ const UserSchema = new mongoose.Schema({
         platformUsername: String,
         profileUrl: String,
         verified: {
-            type: String,
+            type: Boolean,
             default: false
         },
     }]
   },  { timestamps: true });
 
-    User = mongoose.model('User', UserSchema);
+    const User = mongoose.model('User', UserSchema);
 
     module.exports = User;

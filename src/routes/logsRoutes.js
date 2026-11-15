@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { createLog, getMyLogs, deleteLog } = require('../controllers/logController');
+const { createLog, getMyLogs, deleteLog } = require('../controllers/learningLogController');
 const auth = require('../middleware/auth');
 const { logValidator } = require('../validators/logValidator');
 const validate = require('../middleware/validate');

@@ -1,6 +1,6 @@
-const User = require('../models/User');
-const LearningLog = require('../models/LearningLog');
-const Platform = require('../models/Platform');
+const User = require('../models/userModel');
+const LearningLog = require('../models/learningLogModel');
+const Platform = require('../models/platformModel');
 
 const getMe = async (req,res) => {
   const user = await User.findById(req.user).populate('track').select('-password');

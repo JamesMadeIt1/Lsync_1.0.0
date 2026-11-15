@@ -1,7 +1,11 @@
 const router = require('express').Router();
-const { getMyStats } = require('../controllers/statsController');
+
 const auth = require('../middleware/auth');
 
-router.get('/myStats', auth, getMyStats);
+const {
+  getMyStats
+} = require('../controllers/statsController');
+
+router.get('/stats', auth, getMyStats);
 
 module.exports = router;

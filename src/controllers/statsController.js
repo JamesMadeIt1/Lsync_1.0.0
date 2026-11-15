@@ -1,4 +1,4 @@
-const Learninglog = require('./models/learningLogModel.js');
+const Learninglog = require('../models/learningLogModel.js');
 
 const getMyStats = async (req, res, next) => {
     try {
@@ -37,4 +37,4 @@ const getMyStats = async (req, res, next) => {
     }
 };
 
-module.exports = getMyStats;
+module.exports = { getMyStats };
