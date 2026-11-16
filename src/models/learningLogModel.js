@@ -1,45 +1,75 @@
+
 const mongoose = require('mongoose');
 
 const LogSchema = new mongoose.Schema({
-user: {
+  user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
-},
-skill: {
+  },
+
+  skill: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Skill'
-},
-platform: {
+  },
+
+  platform: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Platform'
-},
-track: {
+  },
+
+  track: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Track'
-},
-title: {
+  },
+
+  title: {
     type: String,
-    required: true
-},
-description: String,
-durationMinutes: {
+    required: true,
+    trim: true
+  },
+
+  description: {
+    type: String,
+    trim: true
+  },
+
+  durationMinutes: {
     type: Number,
-    required: true
-},
-type: {
+    required: true,
+    min: 1
+  },
+
+  type: {
     type: String,
-    enum: ['Video', 'Reading', 'Coding', 'Project', 'Practice', 'Certificate'],
-    default: " "
-},
-proofUrl: String,
-date: {
+    enum: [
+      'Video',
+      'Reading',
+      'Coding',
+      'Project',
+      'Practice',
+      'Certificate'
+    ],
+    default: 'Reading'
+  },
+
+  proofUrl: {
+    type: String,
+    trim: true
+  },
+
+  date: {
     type: Date,
     default: Date.now
-},
+  }
+
 }, { timestamps: true });
 
-LearningLog = mongoose.model('LearningLog', LogSchema );
+LogSchema.index({ user: 1, date: -1 });
+
+const LearningLog = mongoose.model(
+  'LearningLog',
+  LogSchema
+);
 
 module.exports = LearningLog;
-

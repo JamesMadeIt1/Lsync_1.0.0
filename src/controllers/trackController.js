@@ -1,4 +1,4 @@
-const Track = require('./models/Track');
+const Track = require('../models/trackModel');
 
 const createTrack = async (req, res, next) => {
     try {
