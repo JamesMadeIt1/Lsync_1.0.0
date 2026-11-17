@@ -1,9 +1,11 @@
 const router = require('express').Router();
 const auth = require('../middleware/auth');
+const admin = require('../middleware/admin');
 const validate = require('../middleware/validate');
-const { getMe, updateProfile, updatePassword, updatePrivacy, addPlatformAccount, removePlatformAccount, deleteAccount } = require('../controllers/userController');
+const { getAllUsers, getMe, updateProfile, updatePassword, updatePrivacy, addPlatformAccount, removePlatformAccount, deleteAccount } = require('../controllers/userController');
 const { updateProfileValidator, updatePasswordValidator, deleteAccountValidator, privacyValidator, addAccountLinkValidator } = require('../validators/userValidator');
 
+router.get('/', auth, admin, getAllUsers);
 router.get('/me', auth, getMe);
 
 router.put('/profile', auth, updateProfileValidator, validate, updateProfile);
