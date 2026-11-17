@@ -2,6 +2,14 @@ const User = require('../models/userModel');
 const LearningLog = require('../models/learningLogModel');
 const Platform = require('../models/platformModel');
 
+const getAllUsers = async (req, res) => {
+  const users = await User.find()
+    .select('_id name username email role createdAt')
+    .sort({ createdAt: -1 })
+    .lean();
+  res.json({ success: true, data: users });
+};
+
 const getMe = async (req,res) => {
   const user = await User.findById(req.user).populate('track').select('-password');
   res.json({ success:true, data:user });
@@ -77,6 +85,7 @@ const deleteAccount = async (req,res) => {
 
 
 module.exports = {
+ getAllUsers,
  getMe,
  updateProfile,
  updatePassword,
