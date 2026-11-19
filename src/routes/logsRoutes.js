@@ -8,20 +8,21 @@ const {
 const auth = require('../middleware/auth');
 const {
   logValidator,
+  logProgressParamsValidator,
   logProgressValidator
 } = require('../validators/logValidator');
 const validate = require('../middleware/validate');
 
 
-router.post('/log', auth, logValidator, validate, createLog);
+router.post('/log', auth, validate(logValidator), createLog);
 
 router.get('/log', auth, getMyLogs);
 
 router.patch(
   '/log/:id/progress',
   auth,
-  logProgressValidator,
-  validate,
+  validate(logProgressParamsValidator, 'params'),
+  validate(logProgressValidator),
   updateLogProgress
 );
 

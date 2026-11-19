@@ -8,16 +8,16 @@ const { updateProfileValidator, updatePasswordValidator, deleteAccountValidator,
 router.get('/', auth, admin, getAllUsers);
 router.get('/me', auth, getMe);
 
-router.put('/profile', auth, updateProfileValidator, validate, updateProfile);
+router.put('/profile', auth, validate(updateProfileValidator), updateProfile);
 
-router.put('/password', auth, updatePasswordValidator, validate, updatePassword);
+router.put('/password', auth, validate(updatePasswordValidator), updatePassword);
 
-router.put('/privacy', auth, privacyValidator, validate, updatePrivacy);
+router.put('/privacy', auth, validate(privacyValidator), updatePrivacy);
 
-router.post('/accounts', auth, addAccountLinkValidator, validate, addPlatformAccount);
+router.post('/accounts', auth, validate(addAccountLinkValidator), addPlatformAccount);
 
 router.delete('/accounts/:accountId', auth, removePlatformAccount);
 
-router.delete('/delete', auth, deleteAccountValidator, validate, deleteAccount);
+router.delete('/delete', auth, validate(deleteAccountValidator), deleteAccount);
 
 module.exports = router;

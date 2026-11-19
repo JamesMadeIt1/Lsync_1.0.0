@@ -1,42 +1,98 @@
+const Joi = require('joi');
 
-const { body } = require('express-validator');
-
-const registerValidator = [
-  body('name')
+const registerValidator = Joi.object({
+  name: Joi.string()
     .trim()
-    .notEmpty()
-    .withMessage('Name is required'),
+    .required()
+    .messages({
+      'string.empty': 'Name is required',
+      'any.required': 'Name is required'
+    }),
 
-  body('username')
+  username: Joi.string()
     .trim()
-    .toLowerCase()
-    .isLength({ min: 5 })
-    .withMessage('Username must be at least 5 characters')
-    .matches(/^[a-z0-9_]+$/)
-    .withMessage('Username can contain lowercase letters, numbers and underscores'),
+    .lowercase()
+    .min(5)
+    .pattern(/^[a-z0-9_]+$/)
+    .required()
+    .messages({
+      'string.min': 'Username must be at least 5 characters',
+      'string.pattern.base':
+        'Username can contain lowercase letters, numbers and underscores'
+    }),
 
-  body('email')
+  email: Joi.string()
     .trim()
-    .isEmail()
-    .withMessage('Valid email is required')
-    .normalizeEmail(),
+    .email()
+    .lowercase()
+    .required()
+    .messages({
+      'string.email': 'Valid email is required',
+      'string.empty': 'Valid email is required',
+      'any.required': 'Valid email is required'
+    }),
 
-  body('password')
-    .isLength({ min: 8 })
-    .withMessage('Password must be at least 8 characters')
-];
+  password: Joi.string()
+    .min(8)
+    .required()
+    .messages({
+      'string.min': 'Password must be at least 8 characters'
+    })
+});
 
-const loginValidator = [
-  body('email')
-    .isEmail()
-    .withMessage('Valid email is required'),
+const loginValidator = Joi.object({
+  email: Joi.string()
+    .email()
+    .required()
+    .messages({
+      'string.email': 'Valid email is required',
+      'string.empty': 'Valid email is required',
+      'any.required': 'Valid email is required'
+    }),
 
-  body('password')
-    .notEmpty()
-    .withMessage('Password is required')
-];
+  password: Joi.string()
+    .required()
+    .messages({
+      'string.empty': 'Password is required',
+      'any.required': 'Password is required'
+    })
+});
+
+const forgotPasswordValidator = Joi.object({
+  email: Joi.string()
+    .trim()
+    .email()
+    .lowercase()
+    .required()
+    .messages({
+      'string.email': 'Valid email is required',
+      'string.empty': 'Valid email is required',
+      'any.required': 'Valid email is required'
+    })
+});
+
+const resetPasswordValidator = Joi.object({
+  token: Joi.string()
+    .hex()
+    .length(64)
+    .required()
+    .messages({
+      'string.hex': 'Invalid or expired reset token',
+      'string.length': 'Invalid or expired reset token',
+      'any.required': 'Invalid or expired reset token'
+    }),
+  newPassword: Joi.string()
+    .min(8)
+    .required()
+    .messages({
+      'string.min': 'Password must be at least 8 characters',
+      'any.required': 'Password is required'
+    })
+});
 
 module.exports = {
   registerValidator,
-  loginValidator
+  loginValidator,
+  forgotPasswordValidator,
+  resetPasswordValidator
 };

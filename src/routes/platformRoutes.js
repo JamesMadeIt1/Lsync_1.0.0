@@ -7,6 +7,6 @@ const validate = require('../middleware/validate');
 
 router.get('/platform', auth, getMyPlatforms);
 
-router.post('/platform', auth, platformValidator, validate, createPlatform);
+router.post('/platform', auth, validate(platformValidator), createPlatform);
 
 module.exports = router;

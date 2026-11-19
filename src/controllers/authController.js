@@ -4,9 +4,9 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 
 // Generate JWT token
-const generateToken = (userId) => {
+const generateToken = (userId, tokenVersion = 0) => {
   return jwt.sign(
-    { id: userId },
+    { id: userId, tokenVersion },
     process.env.JWT_SECRET,
     { expiresIn: '3d' }
   );
@@ -65,7 +65,7 @@ const register = async (req, res) => {
       isPublic
     });
 
-    const token = generateToken(user._id);
+    const token = generateToken(user._id, user.tokenVersion || 0);
 
     // Never return password hash
     const userData = user.toObject();
@@ -104,7 +104,7 @@ const login = async (req, res) => {
 
     const user = await User.findOne({
       email: normalizedEmail
-    }).select('+password');
+    }).select('+password +tokenVersion');
 
     if (!user) {
       return res.status(401).json({
@@ -125,7 +125,7 @@ const login = async (req, res) => {
       });
     }
 
-    const token = generateToken(user._id);
+    const token = generateToken(user._id, user.tokenVersion || 0);
 
     const userData = user.toObject();
     delete userData.password;

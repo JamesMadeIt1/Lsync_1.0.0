@@ -34,12 +34,24 @@ const auth = async (req, res, next) => {
     );
 
     // Confirm user still exists
-    const user = await User.findById(decoded.id);
+    const user = await User.findById(decoded.id)
+      .select('+tokenVersion');
 
     if (!user) {
       return res.status(401).json({
         success: false,
         message: 'User account no longer exists'
+      });
+    }
+
+    const tokenVersion = Number.isInteger(decoded.tokenVersion)
+      ? decoded.tokenVersion
+      : 0;
+
+    if (tokenVersion !== (user.tokenVersion || 0)) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid or expired token'
       });
     }
 

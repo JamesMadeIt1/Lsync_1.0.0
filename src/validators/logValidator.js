@@ -1,114 +1,146 @@
-const { body, param } = require('express-validator');
+const Joi = require('joi');
 
+const objectId = Joi.string().hex().length(24);
 
-const logValidator = [
-  body('title')
-    .isString()
-    .withMessage('Title must be text')
+const logValidator = Joi.object({
+  title: Joi.string()
     .trim()
-    .notEmpty()
-    .withMessage('Title is required'),
+    .required()
+    .messages({
+      'string.base': 'Title must be text',
+      'string.empty': 'Title is required',
+      'any.required': 'Title is required'
+    }),
 
-  body('durationMinutes')
-    .isFloat({ gt: 0 })
-    .withMessage('Duration must be greater than zero'),
+  durationMinutes: Joi.number()
+    .positive()
+    .required()
+    .messages({
+      'number.base': 'Duration must be greater than zero',
+      'number.positive': 'Duration must be greater than zero',
+      'any.required': 'Duration must be greater than zero'
+    }),
 
-  body('durationSeconds')
-    .optional()
-    .isInt({ min: 1 })
-    .withMessage('Duration in seconds must be a positive whole number')
-    .toInt(),
+  durationSeconds: Joi.number()
+    .integer()
+    .min(1)
+    .messages({
+      'number.base': 'Duration in seconds must be a positive whole number',
+      'number.integer': 'Duration in seconds must be a positive whole number',
+      'number.min': 'Duration in seconds must be a positive whole number'
+    }),
 
-  body('type')
-    .optional()
-    .isIn([
-      'Video',
-      'Reading',
-      'Coding',
-      'Project',
-      'Practice',
-      'Certificate'
-    ])
-    .withMessage('Invalid learning activity type'),
+  type: Joi.string().valid(
+    'Video',
+    'Reading',
+    'Coding',
+    'Project',
+    'Practice',
+    'Certificate'
+  ).messages({
+    'any.only': 'Invalid learning activity type'
+  }),
 
-  body('proofUrl')
-    .optional({ values: 'falsy' })
-    .isURL({ protocols: ['http', 'https'], require_protocol: true })
-    .withMessage('Proof must be a valid HTTP or HTTPS URL'),
+  proofUrl: Joi.string()
+    .uri({ scheme: ['http', 'https'] })
+    .allow('')
+    .messages({
+      'string.uri': 'Proof must be a valid HTTP or HTTPS URL'
+    }),
 
-  body('date')
-    .optional()
-    .isISO8601()
-    .withMessage('Date must be valid'),
+  date: Joi.date().iso().messages({
+    'date.format': 'Date must be valid',
+    'date.base': 'Date must be valid'
+  }),
 
-  body('skill')
-    .optional()
-    .isMongoId()
-    .withMessage('Invalid skill ID'),
+  skill: objectId.messages({
+    'string.hex': 'Invalid skill ID',
+    'string.length': 'Invalid skill ID'
+  }),
 
-  body('platform')
-    .optional()
-    .isMongoId()
-    .withMessage('Invalid platform ID'),
+  platform: objectId.messages({
+    'string.hex': 'Invalid platform ID',
+    'string.length': 'Invalid platform ID'
+  }),
 
-  body('track')
-    .optional()
-    .isMongoId()
-    .withMessage('Invalid track ID')
-];
+  track: objectId.messages({
+    'string.hex': 'Invalid track ID',
+    'string.length': 'Invalid track ID'
+  })
+});
 
-const logProgressValidator = [
-  param('id')
-    .isMongoId()
-    .withMessage('Invalid learning activity ID'),
+const logProgressParamsValidator = Joi.object({
+  id: objectId.required().messages({
+    'string.hex': 'Invalid learning activity ID',
+    'string.length': 'Invalid learning activity ID',
+    'any.required': 'Invalid learning activity ID'
+  })
+});
 
-  body('watchedSeconds')
-    .isInt({ min: 0 })
-    .withMessage('Watched time must be a non-negative whole number')
-    .toInt()
-];
+const logProgressValidator = Joi.object({
+  watchedSeconds: Joi.number()
+    .integer()
+    .min(0)
+    .required()
+    .messages({
+      'number.base': 'Watched time must be a non-negative whole number',
+      'number.integer': 'Watched time must be a non-negative whole number',
+      'number.min': 'Watched time must be a non-negative whole number',
+      'any.required': 'Watched time must be a non-negative whole number'
+    })
+});
 
-const trackValidator = [
-    body('name').notEmpty().withMessage('Track name required')
-];
+const trackValidator = Joi.object({
+  name: Joi.string().min(1).required().messages({
+    'string.empty': 'Track name required',
+    'any.required': 'Track name required'
+  })
+});
 
-const skillValidator = [
-    body('name').notEmpty().withMessage('Skill name is required')
-];
+const skillValidator = Joi.object({
+  name: Joi.string().min(1).required().messages({
+    'string.empty': 'Skill name is required',
+    'any.required': 'Skill name is required'
+  })
+});
 
-
-const platformValidator = [
-  body('name')
-    .isString()
-    .withMessage('Platform name must be text')
+const platformValidator = Joi.object({
+  name: Joi.string()
     .trim()
-    .notEmpty()
-    .withMessage('Platform name is required'),
+    .required()
+    .messages({
+      'string.base': 'Platform name must be text',
+      'string.empty': 'Platform name is required',
+      'any.required': 'Platform name is required'
+    }),
+  type: Joi.string().valid(
+    'Youtube',
+    'Udemy',
+    'Coursera',
+    'GitHub',
+    'Blogs',
+    'Book',
+    'edX',
+    'Other'
+  ).required().messages({
+    'any.only': 'Invalid platform type',
+    'any.required': 'Invalid platform type'
+  })
+});
 
-  body('type')
-    .isIn([
-      'Youtube',
-      'Udemy',
-      'Coursera',
-      'GitHub',
-      'Blogs',
-      'Book',
-      'edX',
-      'Other'
-    ])
-    .withMessage('Invalid platform type')
-];
-
-
-const projectValidator = [
-    body('title').notEmpty().withMessage('Title is required')
-];
+const projectValidator = Joi.object({
+  title: Joi.string().min(1).required().messages({
+    'string.empty': 'Title is required',
+    'any.required': 'Title is required'
+  })
+});
 
 module.exports = {
-    logValidator,
-    logProgressValidator,
-    trackValidator,
-    skillValidator,
-    platformValidator,
-    projectValidator
+  logValidator,
+  logProgressParamsValidator,
+  logProgressValidator,
+  trackValidator,
+  skillValidator,
+  platformValidator,
+  projectValidator
 };

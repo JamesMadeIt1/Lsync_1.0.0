@@ -7,6 +7,6 @@ const validate = require('../middleware/validate');
 
 router.get('/track', getTracks);
 
-router.post('/track', auth, trackValidator, validate, createTrack);
+router.post('/track', auth, validate(trackValidator), createTrack);
 
 module.exports = router;

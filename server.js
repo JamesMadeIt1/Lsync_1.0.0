@@ -23,6 +23,8 @@ const statsRoutes = require('./src/routes/statsRoutes');
 const portfolioRoutes = require('./src/routes/portfolioRoutes');
 const githubRoutes = require('./src/routes/githubRoutes');
 const youtubeRoutes = require('./src/routes/youtubeRoutes');
+const extensionRoutes = require('./src/routes/extensionRoutes');
+const watchEventRoutes = require('./src/routes/watchEventRoutes');
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -43,6 +45,8 @@ app.use('/api/stats', statsRoutes);
 app.use('/api/portfolio', portfolioRoutes);
 app.use('/api/integrations/github', githubRoutes);
 app.use('/api/integrations/youtube', youtubeRoutes);
+app.use('/api/extension', extensionRoutes);
+app.use('/api/watch-events', watchEventRoutes);
 
 // Handle unknown routes
 app.use((req, res) => {

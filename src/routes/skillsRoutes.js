@@ -7,6 +7,6 @@ const validate = require('../middleware/validate');
 
 router.get('/skill', getSkills);
 
-router.post('/skill', auth, skillValidator, validate, createSkill);
+router.post('/skill', auth, validate(skillValidator), createSkill);
 
 module.exports = router;
