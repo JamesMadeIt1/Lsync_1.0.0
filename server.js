@@ -6,6 +6,10 @@ const app = express();
 
 // Global middleware
 app.use(cors());
+
+app.use(cors({
+  origin: 'http://localhost:3000'
+}));
 app.use(express.json());
 
 // Import routes
@@ -18,6 +22,7 @@ const trackRoutes = require('./src/routes/trackRoutes');
 const statsRoutes = require('./src/routes/statsRoutes');
 const portfolioRoutes = require('./src/routes/portfolioRoutes');
 const githubRoutes = require('./src/routes/githubRoutes');
+const youtubeRoutes = require('./src/routes/youtubeRoutes');
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -37,6 +42,7 @@ app.use('/api/tracks', trackRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/portfolio', portfolioRoutes);
 app.use('/api/integrations/github', githubRoutes);
+app.use('/api/integrations/youtube', youtubeRoutes);
 
 // Handle unknown routes
 app.use((req, res) => {

@@ -1,4 +1,4 @@
-const { body } = require('express-validator');
+const { body, param } = require('express-validator');
 
 
 const logValidator = [
@@ -12,6 +12,12 @@ const logValidator = [
   body('durationMinutes')
     .isFloat({ gt: 0 })
     .withMessage('Duration must be greater than zero'),
+
+  body('durationSeconds')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Duration in seconds must be a positive whole number')
+    .toInt(),
 
   body('type')
     .optional()
@@ -49,6 +55,17 @@ const logValidator = [
     .optional()
     .isMongoId()
     .withMessage('Invalid track ID')
+];
+
+const logProgressValidator = [
+  param('id')
+    .isMongoId()
+    .withMessage('Invalid learning activity ID'),
+
+  body('watchedSeconds')
+    .isInt({ min: 0 })
+    .withMessage('Watched time must be a non-negative whole number')
+    .toInt()
 ];
 
 const trackValidator = [
@@ -89,6 +106,7 @@ const projectValidator = [
 
 module.exports = {
     logValidator,
+    logProgressValidator,
     trackValidator,
     skillValidator,
     platformValidator,

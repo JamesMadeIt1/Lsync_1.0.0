@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const OAuthState = require('../models/oauthStateModel');
 const Platform = require('../models/platformModel');
 const ConnectedAccount = require('../models/connectedAccountModel');
+const { encryptToken } = require('../utils/tokenEncryption');
 
 const CLIENT_ID = process.env.GITHUB_CLIENT_ID;
 const CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
@@ -11,35 +12,6 @@ const CALLBACK_URL = process.env.GITHUB_CALLBACK_URL;
 
 const hashState = (state) =>
   crypto.createHash('sha256').update(state).digest('hex');
-
-const encryptToken = (token) => {
-  const key = Buffer.from(
-    process.env.GITHUB_TOKEN_ENCRYPTION_KEY || '',
-    'hex'
-  );
-
-  if (key.length !== 32) {
-    throw new Error('Invalid GitHub token encryption key');
-  }
-
-  const iv = crypto.randomBytes(12);
-  const cipher = crypto.createCipheriv(
-    'aes-256-gcm',
-    key,
-    iv
-  );
-
-  const encrypted = Buffer.concat([
-    cipher.update(token, 'utf8'),
-    cipher.final()
-  ]);
-
-  return [
-    iv.toString('hex'),
-    cipher.getAuthTag().toString('hex'),
-    encrypted.toString('hex')
-  ].join(':');
-};
 
 // STEP 1: Start GitHub OAuth
 const connectGitHub = async (req, res, next) => {
@@ -182,7 +154,10 @@ const githubCallback = async (req, res, next) => {
       }
     );
 
-    const encryptedToken = encryptToken(accessToken);
+    const encryptedToken = encryptToken(
+      accessToken,
+      'GITHUB_TOKEN_ENCRYPTION_KEY'
+    );
 
     const connectedAccount =
       await ConnectedAccount.findOneAndUpdate(

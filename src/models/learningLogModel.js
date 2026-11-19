@@ -40,6 +40,24 @@ const LogSchema = new mongoose.Schema({
     min: 1
   },
 
+  durationSeconds: {
+    type: Number,
+    min: 1
+  },
+
+  watchedSeconds: {
+    type: Number,
+    min: 0,
+    default: 0
+  },
+
+  completionRate: {
+    type: Number,
+    min: 0,
+    max: 1,
+    default: 0
+  },
+
   type: {
     type: String,
     enum: [

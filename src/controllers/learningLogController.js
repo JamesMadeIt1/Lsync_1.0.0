@@ -9,6 +9,7 @@ const createLog = async (req, res, next) => {
       title,
       description,
       durationMinutes,
+      durationSeconds,
       type,
       proofUrl,
       date,
@@ -22,6 +23,9 @@ const createLog = async (req, res, next) => {
       title,
       description,
       durationMinutes,
+      durationSeconds: durationSeconds === undefined
+        ? Math.round(Number(durationMinutes) * 60)
+        : durationSeconds,
       type,
       proofUrl,
       date,
@@ -67,6 +71,68 @@ const getMyLogs = async (req, res, next) => {
   }
 };
 
+const updateLogProgress = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid learning activity ID'
+      });
+    }
+
+    const log = await LearningLog.findOne({
+      _id: id,
+      user: req.user
+    });
+
+    if (!log) {
+      return res.status(404).json({
+        success: false,
+        message: 'Learning activity not found'
+      });
+    }
+
+    const durationSeconds = log.durationSeconds ||
+      Math.round(Number(log.durationMinutes) * 60);
+
+    if (!Number.isFinite(durationSeconds) || durationSeconds < 1) {
+      return res.status(400).json({
+        success: false,
+        message: 'Learning activity has an invalid duration'
+      });
+    }
+
+    const previousWatchedSeconds = Math.min(
+      log.watchedSeconds || 0,
+      durationSeconds
+    );
+    const reportedWatchedSeconds = Math.min(
+      req.body.watchedSeconds,
+      durationSeconds
+    );
+
+    log.durationSeconds = durationSeconds;
+    log.watchedSeconds = Math.max(
+      previousWatchedSeconds,
+      reportedWatchedSeconds
+    );
+    log.completionRate = log.watchedSeconds / durationSeconds;
+
+    await log.save();
+    await log.populate(['skill', 'platform', 'track']);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Learning progress updated successfully',
+      data: log
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
 // DELETE OWN LEARNING LOG
 const deleteLog = async (req, res, next) => {
   try {
@@ -104,5 +170,6 @@ const deleteLog = async (req, res, next) => {
 module.exports = {
   createLog,
   getMyLogs,
+  updateLogProgress,
   deleteLog
 };

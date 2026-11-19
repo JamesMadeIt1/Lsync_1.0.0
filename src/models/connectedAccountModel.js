@@ -16,7 +16,7 @@ const connectedAccountSchema = new mongoose.Schema({
 
   provider: {
     type: String,
-    enum: ['GitHub'],
+    enum: ['GitHub', 'YouTube'],
     required: true
   },
 
@@ -57,14 +57,19 @@ const connectedAccountSchema = new mongoose.Schema({
   },
 
   accessTokenEncrypted: {
-  type: String,
-  select: false
-},
+    type: String,
+    select: false
+  },
 
-tokenExpiresAt: {
-  type: Date,
-  default: null
-}
+  refreshTokenEncrypted: {
+    type: String,
+    select: false
+  },
+
+  tokenExpiresAt: {
+    type: Date,
+    default: null
+  }
 
 }, { timestamps: true });
 
