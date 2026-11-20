@@ -3,22 +3,12 @@ const Joi = require('joi');
 const registerValidator = Joi.object({
   name: Joi.string()
     .trim()
+    .min(2)
     .required()
     .messages({
       'string.empty': 'Name is required',
+      'string.min': 'Full name must be at least 2 characters',
       'any.required': 'Name is required'
-    }),
-
-  username: Joi.string()
-    .trim()
-    .lowercase()
-    .min(5)
-    .pattern(/^[a-z0-9_]+$/)
-    .required()
-    .messages({
-      'string.min': 'Username must be at least 5 characters',
-      'string.pattern.base':
-        'Username can contain lowercase letters, numbers and underscores'
     }),
 
   email: Joi.string()

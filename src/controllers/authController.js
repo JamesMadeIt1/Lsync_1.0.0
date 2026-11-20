@@ -1,6 +1,7 @@
 
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const User = require('../models/userModel');
 
 // Generate JWT token
@@ -17,52 +18,39 @@ const register = async (req, res) => {
   try {
     const {
       name,
-      username,
       email,
-      password,
-      bio,
-      location,
-      avatar,
-      currentRole,
-      targetRole,
-      track,
-      isPublic
+      password
     } = req.body;
 
     const normalizedEmail = email.trim().toLowerCase();
-    const normalizedUsername = username.trim().toLowerCase();
 
     // Check for existing account
-    const existingUser = await User.findOne({
-      $or: [
-        { email: normalizedEmail },
-        { username: normalizedUsername }
-      ]
-    });
+    const existingUser = await User.findOne({ email: normalizedEmail });
 
     if (existingUser) {
       return res.status(409).json({
         success: false,
-        message: 'Email or username already exists'
+        message: 'Email already exists'
       });
     }
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
+    const normalizedUsername = name
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .slice(0, 35) || 'user';
+    const generatedUsername =
+      `${normalizedUsername}_${crypto.randomBytes(3).toString('hex')}`;
 
     // Create user
     const user = await User.create({
       name,
-      username: normalizedUsername,
+      username: generatedUsername,
       email: normalizedEmail,
-      password: hashedPassword,
-      bio,
-      location,
-      avatar,
-      currentRole,
-      targetRole,
-      track,
-      isPublic
+      password: hashedPassword
     });
 
     const token = generateToken(user._id, user.tokenVersion || 0);
@@ -82,7 +70,7 @@ const register = async (req, res) => {
     if (error.code === 11000) {
       return res.status(409).json({
         success: false,
-        message: 'Email or username already exists'
+        message: 'Email already exists'
       });
     }
 
