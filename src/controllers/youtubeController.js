@@ -169,7 +169,7 @@ const youtubeCallback = async (req, res, next) => {
       accountUpdates.refreshTokenEncrypted = encryptedRefreshToken;
     }
 
-    const connectedAccount = await ConnectedAccount.findOneAndUpdate(
+    await ConnectedAccount.findOneAndUpdate(
       accountQuery,
       { $set: accountUpdates },
       {
@@ -179,16 +179,19 @@ const youtubeCallback = async (req, res, next) => {
       }
     );
 
-    return res.status(200).json({
-      success: true,
-      message: 'YouTube account connected successfully',
-      data: {
-        id: connectedAccount._id,
-        provider: connectedAccount.provider,
-        username: connectedAccount.username,
-        status: connectedAccount.status
-      }
-    });
+    if (!process.env.FRONTEND_URL) {
+      throw new Error('FRONTEND_URL must be configured');
+    }
+
+    const redirectUrl = new URL('/connect', process.env.FRONTEND_URL);
+    if (!['http:', 'https:'].includes(redirectUrl.protocol)) {
+      throw new Error('FRONTEND_URL must use HTTP or HTTPS');
+    }
+
+    redirectUrl.searchParams.set('provider', 'youtube');
+    redirectUrl.searchParams.set('status', 'connected');
+
+    return res.redirect(303, redirectUrl.toString());
   } catch (error) {
     return next(error);
   }

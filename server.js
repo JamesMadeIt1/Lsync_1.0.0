@@ -8,7 +8,7 @@ const app = express();
 app.use(cors());
 
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://lsync-gules.vercel.app'],
+  origin: ['http://localhost:5173', 'https://lsync-gules.vercel.app' ,'https://lsync-frontend-th4c.vercel.app'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true, // Required if sending cookies or Authorization headers
