@@ -144,6 +144,80 @@ const recordWatchEvent = async (req, res, next) => {
   }
 };
 
+const listMyWatchEvents = async (req, res, next) => {
+  try {
+    const pageValue = req.query.page === undefined ? '1' : req.query.page;
+    const limitValue = req.query.limit === undefined ? '20' : req.query.limit;
+    const page = Number(pageValue);
+    const limit = Number(limitValue);
+    const skip = (page - 1) * limit;
+
+    if (
+      typeof pageValue !== 'string' ||
+      !/^[1-9]\d*$/.test(pageValue) ||
+      !Number.isSafeInteger(page) ||
+      typeof limitValue !== 'string' ||
+      !/^[1-9]\d*$/.test(limitValue) ||
+      !Number.isSafeInteger(limit) ||
+      limit > 100 ||
+      !Number.isSafeInteger(skip)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'page must be a positive integer and limit must be between 1 and 100'
+      });
+    }
+
+    const filter = {
+      user: req.user,
+      source: 'extension'
+    };
+    const [events, total] = await Promise.all([
+      WatchEvent.find(filter)
+        .select('videoId categoryName secondsWatched watchedAt source createdAt')
+        .populate({
+          path: 'videoId',
+          select: 'title channelTitle categoryName durationSeconds'
+        })
+        .sort({ watchedAt: -1, _id: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      WatchEvent.countDocuments(filter)
+    ]);
+
+    const data = events.map((event) => {
+      const video = event.videoId && typeof event.videoId === 'object'
+        ? event.videoId
+        : null;
+
+      return {
+        ...event,
+        videoId: video ? video._id : event.videoId,
+        video
+      };
+    });
+
+    const totalPages = Math.ceil(total / limit);
+
+    return res.status(200).json({
+      success: true,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasMore: page < totalPages
+      },
+      count: data.length,
+      data
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
 module.exports = {
-  recordWatchEvent
+  recordWatchEvent,
+  listMyWatchEvents
 };

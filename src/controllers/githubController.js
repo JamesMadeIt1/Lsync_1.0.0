@@ -13,6 +13,23 @@ const CALLBACK_URL = process.env.GITHUB_CALLBACK_URL;
 const hashState = (state) =>
   crypto.createHash('sha256').update(state).digest('hex');
 
+const getGitHubConnectUrl = (status) => {
+  if (!process.env.FRONTEND_URL) {
+    throw new Error('FRONTEND_URL must be configured');
+  }
+
+  const redirectUrl = new URL('/connect', process.env.FRONTEND_URL);
+
+  if (!['http:', 'https:'].includes(redirectUrl.protocol)) {
+    throw new Error('FRONTEND_URL must use HTTP or HTTPS');
+  }
+
+  redirectUrl.searchParams.set('provider', 'github');
+  redirectUrl.searchParams.set('status', status);
+
+  return redirectUrl.toString();
+};
+
 // STEP 1: Start GitHub OAuth
 const connectGitHub = async (req, res, next) => {
   try {
@@ -49,10 +66,10 @@ const githubCallback = async (req, res, next) => {
     const { code, state, error } = req.query;
 
     if (error) {
-      return res.status(400).json({
-        success: false,
-        message: 'GitHub authorization was not completed'
-      });
+      return res.redirect(
+        303,
+        getGitHubConnectUrl('error')
+      );
     }
 
     if (
@@ -159,46 +176,38 @@ const githubCallback = async (req, res, next) => {
       'GITHUB_TOKEN_ENCRYPTION_KEY'
     );
 
-    const connectedAccount =
-      await ConnectedAccount.findOneAndUpdate(
-        {
-          user: pending.user,
-          provider: 'GitHub',
-          externalAccountId: String(profile.id)
-        },
-        {
-          $set: {
-            platform: platform._id,
-            username: profile.login,
-            profileUrl: profile.html_url,
-            status: 'connected',
-            lastSyncError: null,
-            accessTokenEncrypted: encryptedToken,
-            tokenExpiresAt: tokenData.expires_in
-              ? new Date(
-                  Date.now() + tokenData.expires_in * 1000
-                )
-              : null
-          }
-        },
-        {
-          upsert: true,
-          new: true,
-          runValidators: true
+    await ConnectedAccount.findOneAndUpdate(
+      {
+        user: pending.user,
+        provider: 'GitHub',
+        externalAccountId: String(profile.id)
+      },
+      {
+        $set: {
+          platform: platform._id,
+          username: profile.login,
+          profileUrl: profile.html_url,
+          status: 'connected',
+          lastSyncError: null,
+          accessTokenEncrypted: encryptedToken,
+          tokenExpiresAt: tokenData.expires_in
+            ? new Date(
+                Date.now() + tokenData.expires_in * 1000
+              )
+            : null
         }
-      );
-
-    return res.status(200).json({
-      success: true,
-      message: 'GitHub account connected successfully',
-      data: {
-        id: connectedAccount._id,
-        provider: connectedAccount.provider,
-        username: connectedAccount.username,
-        profileUrl: connectedAccount.profileUrl,
-        status: connectedAccount.status
+      },
+      {
+        upsert: true,
+        new: true,
+        runValidators: true
       }
-    });
+    );
+
+    return res.redirect(
+      303,
+      getGitHubConnectUrl('connected')
+    );
 
   } catch (error) {
     next(error);
