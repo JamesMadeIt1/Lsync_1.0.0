@@ -13,7 +13,7 @@ const CALLBACK_URL = process.env.GITHUB_CALLBACK_URL;
 const hashState = (state) =>
   crypto.createHash('sha256').update(state).digest('hex');
 
-const getGitHubConnectUrl = (status) => {
+const getGitHubConnectUrl = (status, reason) => {
   if (!process.env.FRONTEND_URL) {
     throw new Error('FRONTEND_URL must be configured');
   }
@@ -24,8 +24,14 @@ const getGitHubConnectUrl = (status) => {
     throw new Error('FRONTEND_URL must use HTTP or HTTPS');
   }
 
-  redirectUrl.searchParams.set('provider', 'github');
-  redirectUrl.searchParams.set('status', status);
+  if (status === 'connected') {
+    redirectUrl.searchParams.set('github', 'connected');
+  } else {
+    redirectUrl.searchParams.set('github', 'error');
+    if (reason) {
+      redirectUrl.searchParams.set('reason', reason);
+    }
+  }
 
   return redirectUrl.toString();
 };
@@ -68,7 +74,7 @@ const githubCallback = async (req, res, next) => {
     if (error) {
       return res.redirect(
         303,
-        getGitHubConnectUrl('error')
+        getGitHubConnectUrl('error', error)
       );
     }
 
@@ -76,10 +82,10 @@ const githubCallback = async (req, res, next) => {
       typeof code !== 'string' ||
       typeof state !== 'string'
     ) {
-      return res.status(400).json({
-        success: false,
-        message: 'Missing OAuth code or state'
-      });
+      return res.redirect(
+        303,
+        getGitHubConnectUrl('error', 'Missing OAuth code or state')
+      );
     }
 
     // Consume the state exactly once
@@ -89,10 +95,10 @@ const githubCallback = async (req, res, next) => {
     });
 
     if (!pending) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid or expired OAuth state'
-      });
+      return res.redirect(
+        303,
+        getGitHubConnectUrl('error', 'Invalid or expired OAuth state')
+      );
     }
 
     // Exchange authorization code for access token
@@ -121,10 +127,10 @@ const githubCallback = async (req, res, next) => {
     const tokenData = await tokenResponse.json();
 
     if (!tokenData.access_token || tokenData.error) {
-      return res.status(400).json({
-        success: false,
-        message: 'GitHub did not authorize the connection'
-      });
+      return res.redirect(
+        303,
+        getGitHubConnectUrl('error', 'GitHub did not authorize the connection')
+      );
     }
 
     const accessToken = tokenData.access_token;
@@ -210,7 +216,11 @@ const githubCallback = async (req, res, next) => {
     );
 
   } catch (error) {
-    next(error);
+    console.error('GitHub OAuth callback failed:', error.message);
+    return res.redirect(
+      303,
+      getGitHubConnectUrl('error', 'Unable to complete GitHub connection')
+    );
   }
 };
 

@@ -13,9 +13,13 @@ const validate = (schema, property = 'body') => {
     });
 
     if (error) {
+      const message = error.details
+        .map((detail) => detail.message)
+        .join('. ');
+
       return res.status(400).json({
         success: false,
-        errors: error.details.map((detail) => detail.message)
+        message
       });
     }
 

@@ -16,14 +16,25 @@ const getMe = async (req,res) => {
 };
 
 const updateProfile = async (req,res) => {
-  const { name, username, bio, avatar, track } = req.body;
+  const { name, username, bio, avatar, track, headline, interests } = req.body;
   const user = await User.findById(req.user);
   if (username && username.toLowerCase() !== user.username) {
     const exists = await User.findOne({ username: username.toLowerCase() });
-    if (exists) return res.status(400).json({ msg:'Username taken' });
+    if (exists) return res.status(409).json({
+      success: false,
+      message: 'Username already exists'
+    });
   }
-  const updated = await User.findByIdAndUpdate(req.user, 
-    { name, username: username?.toLowerCase(), bio, avatar, track },
+  const updates = {};
+  for (const field of ['name', 'bio', 'avatar', 'track', 'headline', 'interests']) {
+    if (Object.prototype.hasOwnProperty.call(req.body, field)) {
+      updates[field] = req.body[field];
+    }
+  }
+  if (username) updates.username = username.toLowerCase();
+
+  const updated = await User.findByIdAndUpdate(req.user,
+    updates,
     { new:true, runValidators:true }
   ).select('-password');
   res.json({ success:true, data:updated });
@@ -33,10 +44,13 @@ const updatePassword = async (req,res) => {
   const { currentPassword, newPassword } = req.body;
   const user = await User.findById(req.user);
   const isMatch = await user.comparePassword(currentPassword);
-  if (!isMatch) return res.status(400).json({ msg:'Current password incorrect' });
+  if (!isMatch) return res.status(400).json({
+    success: false,
+    message: 'Current password is incorrect'
+  });
   user.password = newPassword;
   await user.save();
-  res.json({ success:true, msg:'Password updated' });
+  res.json({ success:true, message:'Password updated' });
 };
 
 const updatePrivacy = async (req,res) => {
@@ -51,11 +65,17 @@ const updatePrivacy = async (req,res) => {
 const addPlatformAccount = async (req,res) => {
   const { platformId, platformUsername, profileUrl } = req.body;
   const platform = await Platform.findById(platformId);
-  if (!platform) return res.status(404).json({ msg:'Platform not found' });
+  if (!platform) return res.status(404).json({
+    success: false,
+    message: 'Platform not found'
+  });
   
   const user = await User.findById(req.user);
   const exists = user.linkedAccounts.find(a => a.platform.toString() === platformId);
-  if (exists) return res.status(400).json({ msg:'Platform already linked' });
+  if (exists) return res.status(409).json({
+    success: false,
+    message: 'Platform already linked'
+  });
 
   user.linkedAccounts.push({ platform: platformId, platformUsername, profileUrl });
   await user.save();
@@ -75,12 +95,15 @@ const deleteAccount = async (req,res) => {
   const { password } = req.body;
   const user = await User.findById(req.user);
   const isMatch = await user.comparePassword(password);
-  if (!isMatch) return res.status(400).json({ msg:'Password incorrect' });
+  if (!isMatch) return res.status(400).json({
+    success: false,
+    message: 'Password is incorrect'
+  });
   
   await LearningLog.deleteMany({ user: req.user });
   await Platform.deleteMany({ user: req.user });
   await User.findByIdAndDelete(req.user);
-  res.json({ success:true, msg:'Account and all data deleted permanently' });
+  res.json({ success:true, message:'Account and all data deleted permanently' });
 };
 
 

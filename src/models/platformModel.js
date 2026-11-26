@@ -11,7 +11,7 @@ const platformSchema = new mongoose.Schema({
   type: {
     type: String,
     enum: [
-      'Youtube',
+      'YouTube',
       'Udemy',
       'Coursera',
       'GitHub',

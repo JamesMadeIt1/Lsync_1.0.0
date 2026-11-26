@@ -27,7 +27,13 @@ const registerValidator = Joi.object({
     .required()
     .messages({
       'string.min': 'Password must be at least 8 characters'
-    })
+    }),
+
+  username: Joi.string()
+    .trim()
+    .min(3)
+    .max(20)
+    .pattern(/^[a-zA-Z0-9_]+$/)
 });
 
 const loginValidator = Joi.object({

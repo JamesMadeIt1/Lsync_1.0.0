@@ -37,6 +37,20 @@ const UserSchema = new mongoose.Schema({
         type: String,
         default: " "
     },
+    headline: {
+        type: String,
+        trim: true,
+        maxlength: 120,
+        default: ""
+    },
+    interests: {
+        type: [String],
+        default: [],
+        validate: {
+            validator: (value) => value.length <= 12,
+            message: 'Interests can contain at most 12 items'
+        }
+    },
     location: String,
     avatar: String,
     currentRole: {

@@ -142,13 +142,13 @@ const youtubeCallback = async (req, res, next) => {
     const platform = await Platform.findOneAndUpdate(
       {
         user: pending.user,
-        type: 'Youtube'
+        type: 'YouTube'
       },
       {
         $set: { name: 'YouTube' },
         $setOnInsert: {
           user: pending.user,
-          type: 'Youtube'
+          type: 'YouTube'
         }
       },
       {

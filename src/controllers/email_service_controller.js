@@ -13,7 +13,11 @@ const hashResetToken = (token) =>
   crypto.createHash('sha256').update(token).digest('hex');
 
 const getResetUrl = (token) => {
-  const configuredUrl = process.env.PASSWORD_RESET_URL;
+  const configuredUrl =
+    process.env.PASSWORD_RESET_URL ||
+    (process.env.FRONTEND_URL
+      ? new URL('/reset-password', process.env.FRONTEND_URL).toString()
+      : null);
 
   if (!configuredUrl) {
     throw new Error('PASSWORD_RESET_URL must be configured');
@@ -34,27 +38,26 @@ const getResetUrl = (token) => {
 
 const forgotPassword = async (req, res, next) => {
   try {
-    getResetUrl();
     const email = req.body.email.trim().toLowerCase();
     const user = await User.findOne({ email }).select('_id');
 
     if (user) {
-      const token = crypto.randomBytes(32).toString('hex');
-      const tokenHash = hashResetToken(token);
-      const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MS);
-      const resetUrl = getResetUrl(token);
-
-      await PasswordResetToken.findOneAndUpdate(
-        { user: user._id },
-        { $set: { tokenHash, expiresAt } },
-        {
-          upsert: true,
-          new: true,
-          runValidators: true
-        }
-      );
-
       try {
+        const token = crypto.randomBytes(32).toString('hex');
+        const tokenHash = hashResetToken(token);
+        const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MS);
+        const resetUrl = getResetUrl(token);
+
+        await PasswordResetToken.findOneAndUpdate(
+          { user: user._id },
+          { $set: { tokenHash, expiresAt } },
+          {
+            upsert: true,
+            new: true,
+            runValidators: true
+          }
+        );
+
         await sendEmail({
           to: email,
           subject: 'Reset your LSync password',
@@ -76,6 +79,7 @@ const forgotPassword = async (req, res, next) => {
     }
 
     return res.status(202).json({
+      success: true,
       message: GENERIC_FORGOT_PASSWORD_MESSAGE
     });
   } catch (error) {

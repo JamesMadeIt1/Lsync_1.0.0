@@ -9,8 +9,8 @@ const videoSchema = new mongoose.Schema({
 
   platform: {
     type: String,
-    enum: ['Youtube'],
-    default: 'Youtube',
+    enum: ['YouTube'],
+    default: 'YouTube',
     immutable: true
   },
 

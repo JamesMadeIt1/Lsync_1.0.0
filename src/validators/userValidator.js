@@ -17,7 +17,17 @@ const updateProfileValidator = Joi.object({
         'Username can only contain letters, numbers and underscore'
     }),
   bio: Joi.string().trim().max(300),
-  avatar: url,
+  headline: Joi.string().trim().max(120).allow(''),
+  interests: Joi.array()
+    .items(Joi.string().trim().min(1).max(100))
+    .max(12),
+  avatar: Joi.string().custom((value, helpers) => {
+    const dataUrl = /^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=\s]+$/;
+    if (dataUrl.test(value) || url.validate(value).error === undefined) {
+      return value;
+    }
+    return helpers.message('Avatar must be a valid image URL or base64 data URL');
+  }),
   track: objectId
 });
 

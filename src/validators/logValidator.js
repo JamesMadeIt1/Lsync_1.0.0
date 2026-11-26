@@ -114,7 +114,7 @@ const platformValidator = Joi.object({
       'any.required': 'Platform name is required'
     }),
   type: Joi.string().valid(
-    'Youtube',
+    'YouTube',
     'Udemy',
     'Coursera',
     'GitHub',

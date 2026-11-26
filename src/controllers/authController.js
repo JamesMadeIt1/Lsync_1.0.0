@@ -19,31 +19,50 @@ const register = async (req, res) => {
     const {
       name,
       email,
-      password
+      password,
+      username
     } = req.body;
 
     const normalizedEmail = email.trim().toLowerCase();
 
     // Check for existing account
-    const existingUser = await User.findOne({ email: normalizedEmail });
+    const existingUser = await User.findOne({
+      $or: [
+        { email: normalizedEmail },
+        ...(username
+          ? [{ username: username.trim().toLowerCase() }]
+          : [])
+      ]
+    });
 
     if (existingUser) {
+      if (existingUser.email === normalizedEmail) {
+        return res.status(409).json({
+          success: false,
+          message: 'Email already exists'
+        });
+      }
       return res.status(409).json({
         success: false,
-        message: 'Email already exists'
+        message: 'Username already exists'
       });
     }
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
-    const normalizedUsername = name
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '_')
-      .replace(/^_+|_+$/g, '')
-      .slice(0, 35) || 'user';
-    const generatedUsername =
-      `${normalizedUsername}_${crypto.randomBytes(3).toString('hex')}`;
+    const normalizedUsername = username
+      ? username.trim().toLowerCase()
+      : (
+          name
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '_')
+            .replace(/^_+|_+$/g, '')
+            .slice(0, 35) || 'user'
+        );
+    const generatedUsername = username
+      ? normalizedUsername
+      : `${normalizedUsername}_${crypto.randomBytes(3).toString('hex')}`;
 
     // Create user
     const user = await User.create({
@@ -68,6 +87,12 @@ const register = async (req, res) => {
 
   } catch (error) {
     if (error.code === 11000) {
+      if (error.keyPattern?.username) {
+        return res.status(409).json({
+          success: false,
+          message: 'Username already exists'
+        });
+      }
       return res.status(409).json({
         success: false,
         message: 'Email already exists'

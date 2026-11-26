@@ -5,10 +5,21 @@ const cors = require('cors');
 const app = express();
 
 // Global middleware
-app.use(cors());
-
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://lsync-gules.vercel.app' ,'https://lsync-frontend-th4c.vercel.app'],
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'https://lsync-gules.vercel.app',
+      'https://lsync-frontend-th4c.vercel.app',
+      process.env.FRONTEND_URL
+    ].filter(Boolean);
+
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error('Origin not allowed by CORS'));
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true, // Required if sending cookies or Authorization headers
@@ -58,13 +69,19 @@ app.use((req, res) => {
     success: false,
     message: 'API endpoint not found'
   });
+});
 
-  app.use((err, req, res, next) => {
-    console.error('Unhandled API error:', err);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error'
-    });
+app.use((err, req, res, next) => {
+  console.error('Unhandled API error:', err);
+  const status = Number.isInteger(err.status)
+    ? err.status
+    : 500;
+
+  res.status(status).json({
+    success: false,
+    message: status === 500
+      ? 'Internal server error'
+      : (err.message || 'Request failed')
   });
 });
 
